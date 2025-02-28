@@ -11,6 +11,8 @@ class MLP:
         self.b_network = list()
         self.outputs = list()
         self.sensitivities = list()
+        self.train_error = list()
+        self.validation_error = list()
 
     def initWeighBiastMatrix(self,v):
         """
@@ -168,7 +170,7 @@ class MLP:
         self.w_network = new_w
         self.b_network = new_b
     
-    def fit(self,X_train,Y_train,l_rate=0.001,expected_error=0.0001,epoch=100,early_stop=False,val_round=0):
+    def fit(self,X_train,Y_train,v1,v2,l_rate=0.001,expected_error=0.0001,n_epoch=100):
         """
         Method that starts the training, this method will have some default values for the trainings
         such as a learning rate of 0.001, expected error of 0.0001, epoch of 100, early stop to False
@@ -179,17 +181,53 @@ class MLP:
             3. l_rate: float number for the learning rate, by default is 0.001
             4. expected_error: float number for the target error, by default is 0.0001
             5. epoch: int number for the quantity of training to do
-            6. early_stop: boolean value, if true it will require a number for the validation round
-            7. val_round: int number of the interval to do a validation round to check if the performance is really improving
         Output:
-            It returns a trained model or an Error if the early stop was activated
+            It doesn't return anything but stores the training errors for graphs
         """
-        pass
+        for epoch in range(n_epoch):
+            n_dataset = len(X_train)
+            iter_errors = []
+            for i in range(n_dataset):
+                self.forward_propagate(v2,X_train[i])
+                self.backpropagate_error(Y_train[i],v2,v1)
+                self.learning_rule(l_rate,X_train[i])
+                errors = Y_train[i] - self.outputs[len(v2) - 1]
+                x,y = errors.shape
+                error = errors.sum()/x
+                iter_errors.append(error)
+            aux = sum(iter_errors)
+            epoch_error = aux/n_dataset
+            print("Error de la epoca {}: {}".format(epoch,epoch_error))
+            self.train_error.append(epoch_error)
+
+    def validate(self,X_test,Y_test,v2):
+        """
+        Method that let generate the validation errors to ensure the model
+        is able to converge properly
+        Inputs:
+            1. X_test: part of the data set for the validation
+            2. Y_test: part of the data set to validate the outputs
+            3. v2: vector to indicate the transfer functions
+        Output:
+            It doesn't return anything but stores de validation error of the model
+            useful for graphs
+        """
+        n_dataset = len(X_test)
+        val_errors = []
+        for i in range(n_dataset):
+            self.forward_propagate(v2,X_test[i])
+            errors = Y_test[i] - self.outputs[len(v2) - 1]
+            x,y = errors.shape
+            error = errors.sum()/x
+            val_errors.append(error)
+        val_error = sum(val_errors)/n_dataset
+        print("Error de validacion: ",val_error)
+        self.validation_error = val_errors
 
 
 #Test section
-print("MLP 0.0.1")
-v1 = [int (x) for x in input().split()]
-network = MLP()
-network.initWeighBiastMatrix(v1)
-print(network.w_network)
+#print("MLP 0.0.1")
+#v1 = [int (x) for x in input().split()]
+#network = MLP()
+#network.initWeighBiastMatrix(v1)
+#print(network.w_network)
