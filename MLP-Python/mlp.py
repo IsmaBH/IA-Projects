@@ -1,4 +1,5 @@
 import numpy as np
+import os
 
 class MLP:
     """
@@ -223,6 +224,45 @@ class MLP:
         val_error = sum(val_errors)/n_dataset
         print("Error de validacion: ",val_error)
         self.validation_error = val_errors
+
+    def set_matrices(self,opt):
+        """
+        This method allows to save the values of the weights and bias of a trained network
+        also in case of already have some files allows to load the values from a txt file
+        and set the weight and bias parameters
+        Inputs:
+            1. opt: option desired (1 for load, 2 for save)
+        Outputs:
+            File(s) for the weights and bias in each layer
+            OR
+            Set of the weights and bias parameters from txt file(s)
+        """
+        if opt == 1:
+            #If opt is one then we load the weights and bias from a file
+            layers = len(self.w_network)
+            for i in range(layers):
+                s1 = "weights{}.txt"
+                s2 = "bias{}.txt"
+                self.w_network[i] = np.loadtxt(s1.format(i),dtype=np.longdouble,delimiter=',')
+                aux = np.loadtxt(s2.format(i),dtype=np.longdouble,delimiter=',')
+                x = aux.shape
+                self.b_network[i] = aux.reshape(x[0],1)
+            print("Datos cargados!")
+        else:
+            #If opc is another number then we save the weights and biases
+            #of the given network in file(s)
+            layers = len(self.w_network)
+            for i in range(layers):
+                s1 = "weights{}.txt"
+                s2 = "bias{}.txt"
+                if os.path.exists(s1.format(i)):
+                    os.remove(s1.format(i))
+                else:
+                    print("File not found")
+            for i in range(layers):
+                np.savetxt(s1.format(i),self.w_network[i],delimiter=",")
+                np.savetxt(s2.format(i),self.b_network[i],delimiter=",")
+            print("Datos guardados!")
 
 
 #Test section
